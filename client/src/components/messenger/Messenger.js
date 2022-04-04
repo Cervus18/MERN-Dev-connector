@@ -16,6 +16,8 @@ const Messenger = () => {
   const [currentChat, setCurrentChat] = useState(null)
   const [messages, setMessages] = useState(null)
   const [newMessage,setNewMessage] = useState('')
+  const [arrivalMessage,setArrivalMessage] = useState(null)
+  const [onlineUsers,setOnlineUsers] = useState([])
   const  socket = useRef()
   const user = useSelector(state => state.auth.user)
   const scrollRef = useRef()
@@ -23,14 +25,28 @@ const Messenger = () => {
 
   useEffect(()=>{
     socket.current = io("ws://localhost:7000")
+    socket.current.on("getMessage", data => {
+        setArrivalMessage({
+            sender: data.senderId,
+            text:data.text,
+            createdAt: Date.now()
+        })
+    })
+
   },[])
+
+
+  useEffect(()=>{
+    arrivalMessage && currentChat?.members.includes(arrivalMessage.sender) &&
+    setMessages(prev => [...prev, arrivalMessage])
+  },[arrivalMessage,currentChat])
 
 
   useEffect(()=>{
     if(user){
         socket.current.emit("addUser", user._id)
         socket.current.on("getUsers", users=> {
-            console.log(users)
+            setOnlineUsers(users)
         })
     }
   },[user])
@@ -66,6 +82,9 @@ useEffect(()=>{
     getMessages()
 },[currentChat])
 
+
+
+
 useEffect(()=>{
     scrollRef.current?.scrollIntoView({behavior:"smooth"})
 },[messages])
@@ -77,6 +96,15 @@ const handleSubmit =  async (e) => {
         text: newMessage,
         conversationId: currentChat._id
     }
+
+    const receiverId = currentChat.members.find(member => member !== user._id)
+    
+    socket.current.emit("sendMessage",{
+        senderId: user._id,
+        receiverId,
+        text: newMessage
+    })
+
     try {
         const res = await axios.post(`/api/messages/`,message)
         setMessages([...messages,res.data])
@@ -120,7 +148,7 @@ const handleSubmit =  async (e) => {
                 </div>
                 <div className="chatBoxBottom">
                     <textarea onChange={(e)=> setNewMessage(e.target.value)} value={newMessage} name="" className='chatMessageInput' id="" cols="30" rows="10"></textarea>
-                    <button className='btn-primary-v2-msg' onClick={handleSubmit}>Send</button>
+                    <button className='btn-primary-v2-msg' onClick={newMessage!='' ? handleSubmit: undefined}>Send</button>
                 </div>
                 </>: 
                 <div className='no-chat'>
@@ -132,11 +160,7 @@ const handleSubmit =  async (e) => {
         </div>
         <div className="chatOnline">
             <div className="chatOnlineWRapper">
-                <ChatOnline/>
-                <ChatOnline/>
-                <ChatOnline/>
-                <ChatOnline/>
-                <ChatOnline/>
+               {/*<ChatOnline onlineUsers={onlineUsers} currentId={user._id} setCurrentChat={setCurrentChat}/>*/} 
 
             </div>
         </div>

@@ -15,6 +15,8 @@ const Profile = ({
   match,
   profile: { profile, loading },
 }) => {
+  
+
   useEffect(() => {
     getProfileById(match.params.id);
   }, [getProfileById, match.params.id]);
@@ -65,8 +67,10 @@ const Profile = ({
                 </div>
              
             </div>
+            
         </Fragment>
       )}
+ 
     </Fragment>
   );
 };

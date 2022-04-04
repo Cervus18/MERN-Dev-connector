@@ -1,7 +1,8 @@
-import React from "react";
+import React, {useState} from "react";
 import {useSelector, useDispatch} from 'react-redux'
 import { followOrUnfollow } from '../../actions/profile'
 import defaultAvatar from '../../img/defaultAvatar.png'
+import SmallChatBox from "../messenger/SmallChatBox";
 
 
 const  ProfileTop = ({profile:{
@@ -12,7 +13,8 @@ const  ProfileTop = ({profile:{
     social,
     user: {name, avatar, _id}
 }}) => {
-
+  
+  const [openChatBox,setOpenChatBox] = useState(false)
   const followings = useSelector(state => state.profile.followings)
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated)
   const loggedUserId = useSelector(state => state.auth.user._id)
@@ -25,6 +27,7 @@ const  ProfileTop = ({profile:{
       
       <img
         className="round-img my-1"
+        style={{"border":"7px solid #fff", "width":"110px","height":"110px"}}
         src={avatar? avatar.url: defaultAvatar}
         alt=""
       />
@@ -34,6 +37,7 @@ const  ProfileTop = ({profile:{
       <p>{location && <span><i  className="fa-solid fa-location-dot"></i>{' '}{location}</span>}</p>
       <br/>
       {(isAuthenticated && loggedUserId !== _id ) && <button onClick={()=>{dispatch(followOrUnfollow(_id))}} style={{"border":"1px solid #fff"}} className={`btn ${!isFollowed? 'btn-success': 'btn-danger'}`}>{isFollowed? 'Unfollow': 'Follow'}</button>}
+      {(isAuthenticated && loggedUserId !== _id ) && <button onClick={()=>{setOpenChatBox(true)}} className="btn" style={{"borderRadius":"18px","marginTop":"10px"}}><i className='fas fa-comment-alt'></i></button>  }
       <div className="icons my-1">
       
         { website && (
@@ -69,7 +73,7 @@ const  ProfileTop = ({profile:{
         )}
 
       
-       
+      {openChatBox && <SmallChatBox name={name} userId={_id} avatar={avatar} isOpen={setOpenChatBox}/>}   
        
        
         
